@@ -1,0 +1,25 @@
+/* FileUpload.css */
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    margin: 5px;
+  }
+  
+  .img-fluid {
+    max-height: 300px; /* Limit the height of the uploaded image */
+    object-fit: contain; /* Maintain aspect ratio */
+  }
+
+  .modal-body {
+    text-align: center;
+  }
+  
