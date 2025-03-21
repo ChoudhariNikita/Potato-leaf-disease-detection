@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { Spinner, Modal } from 'react-bootstrap';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function FileUpload() {
@@ -10,13 +12,70 @@ function FileUpload() {
   const [showModal, setShowModal] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
+  const validateImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        // Example validation: Check dimensions
+        if (img.width < 50 || img.height < 50) {
+          reject('Image is too small. Please upload a larger image.');
+        }
+
+        // Example validation: Check for uniform color (e.g., all white or black)
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        const pixels = imageData.data;
+        let isUniform = true;
+        const [r, g, b] = [pixels[0], pixels[1], pixels[2]];
+
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i] !== r || pixels[i + 1] !== g || pixels[i + 2] !== b) {
+            isUniform = false;
+            break;
+          }
+        }
+
+        if (isUniform) {
+          reject('Image appears to be blank or uniform in color. Please upload a valid image.');
+        }
+
+        resolve();
+      };
+
+      img.onerror = () => {
+        reject('Failed to load the image. Please upload a valid image file.');
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      await validateImage(file);
+      setSelectedFile(file);
+      toast.success('File selected successfully!');
+    } catch (error) {
+      toast.error(error);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Clear the file input
+      }
+    }
   };
 
   const handleSubmit = async () => {
     if (!selectedFile) {
-      alert('Please select a file first');
+      toast.error('Please select a file first');
       return;
     }
 
@@ -34,9 +93,25 @@ function FileUpload() {
 
       setResponse(res.data);
       setShowModal(true); // Show the modal with the result
+      toast.success('File uploaded successfully!');
+      setTimeout(() => {
+        setShowModal(true); // Show the modal with the result after a short delay
+      }, 500);
     } catch (error) {
       console.error('Error uploading the file:', error);
-      setResponse('Error uploading the file');
+
+      // Handle specific error codes
+      if (error.response) {
+        if (error.response.status === 500) {
+            toast.error('Invalid image: The uploaded file is not a valid plant or leaf image.');
+        } else if (error.response.status === 400) {
+          toast.error('Invalid image: The uploaded file is not a valid plant or leaf image.');
+        } else {
+          toast.error(`Unexpected error: ${error.response.data.error || 'Please try again.'}`);
+        }
+      } else {
+        toast.error('Network error: Unable to connect to the server. Please check your internet connection.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -48,6 +123,7 @@ function FileUpload() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''; // Clear the file input
     }
+    toast.info('File input cleared.');
   };
 
   const handleCloseModal = () => setShowModal(false);
@@ -90,8 +166,15 @@ function FileUpload() {
           )}
           <p><strong>Label:</strong> {response?.class}</p>
           <p><strong>Confidence:</strong> {response?.confidence ? (response.confidence * 100).toFixed(2) + '%' : ''}</p>
+          <p><strong>File Name:</strong> {response?.filename}</p>
+          <p><strong>File Size:</strong> {selectedFile ? (selectedFile.size / 1024).toFixed(2) + ' KB' : ''}</p>
+          <p><strong>File Type:</strong> {response?.content_type}</p>
+          <p><strong>Model Version:</strong> 1.0.0</p>
         </Modal.Body>
       </Modal>
+
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   );
 }

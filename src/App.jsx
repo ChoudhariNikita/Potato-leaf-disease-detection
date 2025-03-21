@@ -10,7 +10,7 @@ function App() {
       {/* Header Section with Blue Gradient */}
       <header className="bg-dark text-white d-flex align-items-center p-3 shadow-lg">
         <img src={pdLogo} alt="Logo" className="me-3 rounded-circle logo-img" />
-        <h1 className="m-0 fs-2">LeafHealth</h1>
+        <h1 className="m-0 fs-2">PlantHealth</h1>
       </header>
 
       {/* Main Section */}
@@ -22,7 +22,7 @@ function App() {
 
       {/* Footer */}
       <footer className="text-center mt-5 py-3 border-top">
-        <p className="mb-0">© 2024 LeafHealth. All Rights Reserved.</p>
+        <p className="mb-0">© 2024 PlantHealth. All Rights Reserved.</p>
       </footer>
     </div>
   );
